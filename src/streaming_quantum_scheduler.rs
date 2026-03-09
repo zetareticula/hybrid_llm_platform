@@ -79,11 +79,13 @@ impl QuantumHybridBatcher {
 
         let embeddings = tokio::task::spawn_blocking({
             let tokens = tokens.clone();
-            let model = req.model_name.clone();
-            move || compute_transformer_embeddings(&tokens, &model)
+            // The embedding model is distinct from the served LLM weights.
+            // Use a small, stable encoder for per-token embeddings.
+            let embed_model = "sentence-transformers/all-MiniLM-L6-v2".to_string();
+            move || compute_transformer_embeddings(&tokens, &embed_model)
         })
         .await
-        .unwrap_or_else(|_| ndarray::Array2::zeros((1, 384)));
+        .unwrap_or_else(|_| ndarray::Array2::zeros((tokens.len().max(1), 384)));
 
         let optimized_tokens = tokio::task::spawn_blocking(move || {
             reorder_tokens_quantum(&tokens, embeddings)
@@ -92,7 +94,7 @@ impl QuantumHybridBatcher {
         .unwrap_or_default();
 
         for tok in optimized_tokens {
-            if req.token_sender.send(tok).await.is_err() {
+            if req.token_sender.send(format!("{}[Q]", tok)).await.is_err() {
                 break;
             }
         }
