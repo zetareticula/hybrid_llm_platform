@@ -1,20 +1,8 @@
-#![allow(dead_code, unused_imports)]
-
-mod api;
-mod metrics_ws;
-mod streaming_quantum_scheduler;
-mod gpu_shard;
-mod gpu_batcher;
-mod quantization;
-mod inference;
-mod model_registry;
-mod session;
-mod scheduler;
-
-use metrics_ws::init_metrics_channel;
-use streaming_quantum_scheduler::QuantumHybridBatcher;
+use hybrid_llm_platform::metrics_ws::{init_metrics_channel, start_ws_server};
+use hybrid_llm_platform::streaming_quantum_scheduler::QuantumHybridBatcher;
+use hybrid_llm_platform::gpu_shard::GpuManager;
+use hybrid_llm_platform::api;
 use std::sync::Arc;
-use gpu_shard::GpuManager;
 
 #[tokio::main]
 async fn main() {
@@ -29,7 +17,7 @@ async fn main() {
     batcher.clone().start().await;
     
     // WebSocket metrics (clone sender — broadcast::Sender is Clone)
-    tokio::spawn(metrics_ws::start_ws_server(metrics_tx.clone()));
+    tokio::spawn(start_ws_server(metrics_tx.clone()));
 
     // Start REST / WS API
     api::start_server(metrics_tx, batcher).await;
