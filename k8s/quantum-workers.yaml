@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantum-workers
+  namespace: hybrid-llm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: quantum-worker
+  template:
+    metadata:
+      labels:
+        app: quantum-worker
+    spec:
+      containers:
+      - name: quantum-worker
+        image: yourrepo/quantum-worker:latest
+        env:
+        - name: REDIS_URL
+          value: redis.hybrid-llm.svc.cluster.local:6379

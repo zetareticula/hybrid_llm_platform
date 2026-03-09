@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hybrid-api
+  namespace: hybrid-llm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hybrid-api
+  template:
+    metadata:
+      labels:
+        app: hybrid-api
+    spec:
+      containers:
+      - name: api
+        image: yourrepo/hybrid-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REDIS_URL
+          value: redis.hybrid-llm.svc.cluster.local:6379

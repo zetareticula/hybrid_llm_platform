@@ -1,0 +1,23 @@
+use tokio::sync::mpsc::Receiver;
+use crate::api::Message;
+
+/// Stream chat responses as they are generated
+pub async fn handle_chat_stream(
+    model: String,
+    backend: String,
+    messages: Vec<Message>,
+    quantum_provider: Option<String>,
+) -> Receiver<String> {
+    let backend_enum = match backend.as_str() {
+        "gpu" => crate::inference::scheduler::Backend::GPU,
+        "cpu" => crate::inference::scheduler::Backend::CPU,
+        _ => crate::inference::scheduler::Backend::Hybrid,
+    };
+
+    crate::inference::scheduler::schedule_inference_stream(
+        &model,
+        backend_enum,
+        &messages,
+        quantum_provider.as_deref(),
+    ).await
+}

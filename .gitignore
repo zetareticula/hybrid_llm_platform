@@ -1,0 +1,6 @@
+/target
+**/*.rs.bk
+*.pyo
+__pycache__/
+*.pyc
+.env
